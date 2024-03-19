@@ -217,4 +217,5 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new APIError(401, error?.message, "Error is refreshing the token !");
   }
 });
+
 export { registerUser, loginUser, logoutUser, refreshAccessToken };
