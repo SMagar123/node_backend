@@ -7,8 +7,8 @@ import { APIResponse } from "../utils/APIResponse.js";
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const refreshToken = user.generateRefreshToken();
     const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
     return { refreshToken, accessToken };
@@ -101,7 +101,7 @@ const loginUser = asyncHandler(async (req, res) => {
   //send cookie
 
   const { email, username, password } = req.body;
-  if (!username || !email) {
+  if (!(username || email)) {
     throw new APIError(400, "Username or email is required !");
   }
 
@@ -118,7 +118,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new APIError(401, "Invalid user credentials !");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+  const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(
     user._id
   );
 
