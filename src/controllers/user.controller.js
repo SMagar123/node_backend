@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinaryFileUpload.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import jwt from "jsonwebtoken";
 
+
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -20,7 +21,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
     );
   }
 };
-
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
@@ -91,6 +91,61 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       new APIResponse(200, channel?.[0], "User channel fetched successfully")
     );
 });
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new APIResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched successfully !!!"
+      )
+    );
+});
+
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend
@@ -397,4 +452,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  getWatchHistory,
 };
